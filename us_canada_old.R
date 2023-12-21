@@ -123,12 +123,15 @@ e_t_out_of_sample_actual = canada_time_series$e[34:74]
 time = canada_time_series$time[34:74]
 
 difference = (e_t_predictions - e_t_out_of_sample_actual)/(e_t_out_of_sample_actual)
+split_times = c(time[seq(1, length(time), by = 5)])
+split_times = head(split_times, -1)
+time <- factor(canada_time_series$time[34:74], levels = split_times)
+
 ggplot() +
-  geom_line(aes(x = time, y = difference, color = "Differences", group = 1))+
-  labs(title = "Time Series Plot of Differences - Canada/US Exchange rate", x = "Time", y = "Percentage Change") +
+  geom_line(aes(x = time, y = difference, group = 1)) +
+  labs(title = "Time Series Plot of Differences - Canada/US Exchange", x = "Time", y = "Percentage Difference") +
   theme_minimal() +
-  theme(text = element_text(size = 14),
-      legend.position = "bottom") 
-  #coord_cartesian(ylim = c(-20, 20))
+  theme(text = element_text(size = 14), legend.position = "bottom") +
+  coord_cartesian(ylim = c(-2.0, 2.0))
 
 
