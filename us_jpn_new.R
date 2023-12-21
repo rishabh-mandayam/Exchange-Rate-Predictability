@@ -3,44 +3,44 @@ library(scales)
 library(dplyr)
 
 LAMBDA = 1
-india_time_series$e = log(india_time_series$e)
+japan_time_series$e = log(japan_time_series$e)
 
-india_time_series$log_us_m = log(india_time_series$us_money_stock)
-india_time_series$log_ind_m = log(india_time_series$ind_money_stock)
+japan_time_series$log_us_m = log(japan_time_series$us_money_stock)
+japan_time_series$log_jpn_m = log(japan_time_series$jpn_money_stock)
 
-india_time_series$log_us_y = log(india_time_series$us_real_income)
-india_time_series$log_ind_y = log(india_time_series$ind_real_income)
+japan_time_series$log_us_y = log(japan_time_series$us_real_income)
+japan_time_series$log_jpn_y = log(japan_time_series$jpn_real_income)
 
 #Seasonality Reduction:
-india_time_series = india_time_series %>%
+japan_time_series = japan_time_series %>%
   mutate(
     log_us_m_lag1 = lag(log_us_m, 1),
     log_us_m_lag2 = lag(log_us_m, 2),
     log_us_m_lag3 = lag(log_us_m, 3),
-    log_ind_m_lag1 = lag(log_ind_m, 1),
-    log_ind_m_lag2 = lag(log_ind_m, 2),
-    log_ind_m_lag3 = lag(log_ind_m, 3),
+    log_jpn_m_lag1 = lag(log_jpn_m, 1),
+    log_jpn_m_lag2 = lag(log_jpn_m, 2),
+    log_jpn_m_lag3 = lag(log_jpn_m, 3),
   ) %>%
   mutate_all(funs(ifelse(is.na(.), 0, .)))
 
-india_time_series = india_time_series %>%
+japan_time_series = japan_time_series %>%
   mutate(log_us_m_lag = log_us_m + log_us_m_lag1 + log_us_m_lag2 + log_us_m_lag3)
 
-india_time_series = india_time_series %>%
-  mutate(log_ind_m_lag = log_ind_m + log_ind_m_lag1 + log_ind_m_lag2 + log_ind_m_lag3)
+japan_time_series = japan_time_series %>%
+  mutate(log_jpn_m_lag = log_jpn_m + log_jpn_m_lag1 + log_jpn_m_lag2 + log_jpn_m_lag3)
 
-india_time_series = india_time_series %>%
+japan_time_series = japan_time_series %>%
   select(-log_us_m_lag1, -log_us_m_lag2, -log_us_m_lag3)
-india_time_series = india_time_series %>%
-  select(-log_ind_m_lag1, -log_ind_m_lag2, -log_ind_m_lag3)
+japan_time_series = japan_time_series %>%
+  select(-log_jpn_m_lag1, -log_jpn_m_lag2, -log_jpn_m_lag3)
 
 
-m_dif = india_time_series$log_us_m_lag - india_time_series$log_ind_m_lag
-y_dif = india_time_series$log_us_y - india_time_series$log_ind_y
+m_dif = japan_time_series$log_us_m_lag - japan_time_series$log_jpn_m_lag
+y_dif = japan_time_series$log_us_y - japan_time_series$log_jpn_y
 
 f = m_dif - LAMBDA*y_dif
-z = f - india_time_series$e
-one_period_lag = diff(india_time_series$e, lag = 1)
+z = f - japan_time_series$e
+one_period_lag = diff(japan_time_series$e, lag = 1)
 
 #drop last values of f and z
 f = head(f, -1)
@@ -72,9 +72,9 @@ debiased_beta = 2*biased_beta - mean(mat_b_rb)
 se_b_rb = apply(mat_b_rb, 2, sd)
 
 #in_sample_ols
-in_f = head(f, 49)
-in_z = head(z, 49)
-in_one_period_lag = head(one_period_lag, 49)
+in_f = head(f, 50)
+in_z = head(z, 50)
+in_one_period_lag = head(one_period_lag, 50)
 
 
 in_sample_ols = lm(formula = in_one_period_lag ~ in_z)
@@ -104,10 +104,10 @@ in_se_b_rb = apply(in_mat_b_rb, 2, sd)
 
 #out of sample predictions
 alpha = coef(in_sample_ols)[1]
-out_z = z[49:93]
+out_z = z[50:94]
 
 e_t_predictions = numeric(45)
-e_t_predictions[1] = india_time_series$e[49]
+e_t_predictions[1] = japan_time_series$e[50]
 for (i in 2:44) {
   print(i)
   print(out_z[i-1])
@@ -119,17 +119,17 @@ for (i in 2:44) {
 }
 
 #plotting predictions against actual
-e_t_out_of_sample_actual = india_time_series$e[49:93]
-time = india_time_series$time[49:93]
+e_t_out_of_sample_actual = japan_time_series$e[50:94]
+time = japan_time_series$time[50:94]
 
 difference = (e_t_predictions - e_t_out_of_sample_actual)/(e_t_out_of_sample_actual)
 split_times = c(time[seq(1, length(time), by = 5)])
 split_times = head(split_times, -1)
-time <- factor(india_time_series$time[50:94], levels = split_times)
+time <- factor(japan_time_series$time[50:94], levels = split_times)
 
 ggplot() +
   geom_line(aes(x = time, y = difference, group = 1)) +
-  labs(title = "Time Series Plot of Differences - INR/USD Exchange", x = "Time", y = "Percentage Difference") +
+  labs(title = "Time Series Plot of Differences - JPY/USD Exchange", x = "Time", y = "Percentage Difference") +
   theme_minimal() +
   theme(text = element_text(size = 14), legend.position = "bottom") +
   coord_cartesian(ylim = c(-2.0, 2.0))
