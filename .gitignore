@@ -2,3 +2,6 @@
 cleaned_data/.DS_Store
 cleaned_data/old/.DS_Store
 cleaned_data/new/.DS_Store
+.Rproj.user
+.RData
+.Rhistory
