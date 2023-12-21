@@ -129,7 +129,7 @@ time <- factor(switzerland_time_series$time[34:74], levels = split_times)
 
 ggplot() +
   geom_line(aes(x = time, y = difference, group = 1)) +
-  labs(title = "Time Series Plot of Differences - Switzerland/US Exchange", x = "Time", y = "Percentage Difference") +
+  labs(title = "Time Series Plot of Differences - CHF/USD Exchange", x = "Time", y = "Percentage Difference") +
   theme_minimal() +
   theme(text = element_text(size = 14), legend.position = "bottom") +
   coord_cartesian(ylim = c(-2.0, 2.0))
