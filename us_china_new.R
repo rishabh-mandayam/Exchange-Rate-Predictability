@@ -3,44 +3,44 @@ library(scales)
 library(dplyr)
 
 LAMBDA = 1
-japan_time_series$e = log(japan_time_series$e)
+china_time_series$e = log(china_time_series$e)
 
-japan_time_series$log_us_m = log(japan_time_series$us_money_stock)
-japan_time_series$log_jpn_m = log(japan_time_series$jpn_money_stock)
+china_time_series$log_us_m = log(china_time_series$us_money_stock)
+china_time_series$log_cny_m = log(china_time_series$cny_money_stock)
 
-japan_time_series$log_us_y = log(japan_time_series$us_real_income)
-japan_time_series$log_jpn_y = log(japan_time_series$jpn_real_income)
+china_time_series$log_us_y = log(china_time_series$us_real_income)
+china_time_series$log_cny_y = log(china_time_series$cny_real_income)
 
 #Seasonality Reduction:
-japan_time_series = japan_time_series %>%
+china_time_series = china_time_series %>%
   mutate(
     log_us_m_lag1 = lag(log_us_m, 1),
     log_us_m_lag2 = lag(log_us_m, 2),
     log_us_m_lag3 = lag(log_us_m, 3),
-    log_jpn_m_lag1 = lag(log_jpn_m, 1),
-    log_jpn_m_lag2 = lag(log_jpn_m, 2),
-    log_jpn_m_lag3 = lag(log_jpn_m, 3),
+    log_cny_m_lag1 = lag(log_cny_m, 1),
+    log_cny_m_lag2 = lag(log_cny_m, 2),
+    log_cny_m_lag3 = lag(log_cny_m, 3),
   ) %>%
   mutate_all(funs(ifelse(is.na(.), 0, .)))
 
-japan_time_series = japan_time_series %>%
+china_time_series = china_time_series %>%
   mutate(log_us_m_lag = log_us_m + log_us_m_lag1 + log_us_m_lag2 + log_us_m_lag3)
 
-japan_time_series = japan_time_series %>%
-  mutate(log_jpn_m_lag = log_jpn_m + log_jpn_m_lag1 + log_jpn_m_lag2 + log_jpn_m_lag3)
+china_time_series = china_time_series %>%
+  mutate(log_cny_m_lag = log_cny_m + log_cny_m_lag1 + log_cny_m_lag2 + log_cny_m_lag3)
 
-japan_time_series = japan_time_series %>%
+china_time_series = china_time_series %>%
   select(-log_us_m_lag1, -log_us_m_lag2, -log_us_m_lag3)
-japan_time_series = japan_time_series %>%
-  select(-log_jpn_m_lag1, -log_jpn_m_lag2, -log_jpn_m_lag3)
+china_time_series = china_time_series %>%
+  select(-log_cny_m_lag1, -log_cny_m_lag2, -log_cny_m_lag3)
 
 
-m_dif = japan_time_series$log_us_m_lag - japan_time_series$log_jpn_m_lag
-y_dif = japan_time_series$log_us_y - japan_time_series$log_jpn_y
+m_dif = china_time_series$log_us_m_lag - china_time_series$log_cny_m_lag
+y_dif = china_time_series$log_us_y - china_time_series$log_cny_y
 
 f = m_dif - LAMBDA*y_dif
-z = f - japan_time_series$e
-one_period_lag = diff(japan_time_series$e, lag = 1)
+z = f - china_time_series$e
+one_period_lag = diff(china_time_series$e, lag = 1)
 
 #drop last values of f and z
 f = head(f, -1)
@@ -72,9 +72,9 @@ debiased_beta = 2*biased_beta - mean(mat_b_rb)
 se_b_rb = apply(mat_b_rb, 2, sd)
 
 #in_sample_ols
-in_f = head(f, 50)
-in_z = head(z, 50)
-in_one_period_lag = head(one_period_lag, 50)
+in_f = head(f, 34)
+in_z = head(z, 34)
+in_one_period_lag = head(one_period_lag, 34)
 
 
 in_sample_ols = lm(formula = in_one_period_lag ~ in_z)
@@ -104,26 +104,26 @@ in_se_b_rb = apply(in_mat_b_rb, 2, sd)
 
 #out of sample predictions
 alpha = coef(in_sample_ols)[1]
-out_z = z[50:94]
+out_z = z[34:75]
 
-e_t_predictions = numeric(45)
-e_t_predictions[1] = japan_time_series$e[50]
-for (i in 2:44) {
+e_t_predictions = numeric(42)
+e_t_predictions[1] = china_time_series$e[34]
+for (i in 2:41) {
   e_t_predictions[i] = as.numeric(alpha) + as.numeric(in_debiased_beta) * out_z[i - 1] + e_t_predictions[i - 1]
 }
 
 #plotting predictions against actual
-e_t_out_of_sample_actual = japan_time_series$e[50:94]
-time = japan_time_series$time[50:94]
+e_t_out_of_sample_actual = china_time_series$e[34:75]
+time = china_time_series$time[34:75]
 
 difference = (e_t_predictions - e_t_out_of_sample_actual)/(e_t_out_of_sample_actual)
 split_times = c(time[seq(1, length(time), by = 5)])
 split_times = head(split_times, -1)
-time <- factor(japan_time_series$time[50:94], levels = split_times)
+time <- factor(china_time_series$time[34:75], levels = split_times)
 
 ggplot() +
   geom_line(aes(x = time, y = difference, group = 1)) +
-  labs(title = "Time Series Plot of Differences - JPY/USD Exchange", x = "Time", y = "Percentage Difference") +
+  labs(title = "Time Series Plot of Differences - CNY/USD Exchange", x = "Time", y = "Percentage Difference") +
   theme_minimal() +
   theme(text = element_text(size = 14), legend.position = "bottom") +
   coord_cartesian(ylim = c(-2.0, 2.0))

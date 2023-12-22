@@ -109,12 +109,6 @@ out_z = z[49:93]
 e_t_predictions = numeric(45)
 e_t_predictions[1] = india_time_series$e[49]
 for (i in 2:44) {
-  print(i)
-  print(out_z[i-1])
-  print(e_t_predictions[i-1])
-  print(as.numeric(alpha))
-  print(as.numeric(in_debiased_beta))
-  
   e_t_predictions[i] = as.numeric(alpha) + as.numeric(in_debiased_beta) * out_z[i - 1] + e_t_predictions[i - 1]
 }
 
