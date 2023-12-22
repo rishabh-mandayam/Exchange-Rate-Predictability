@@ -72,9 +72,9 @@ debiased_beta = 2*biased_beta - mean(mat_b_rb)
 se_b_rb = apply(mat_b_rb, 2, sd)
 
 #in_sample_ols
-in_f = head(f, 34)
-in_z = head(z, 34)
-in_one_period_lag = head(one_period_lag, 34)
+in_f = head(f, 49)
+in_z = head(z, 49)
+in_one_period_lag = head(one_period_lag, 49)
 
 
 in_sample_ols = lm(formula = in_one_period_lag ~ in_z)
@@ -104,11 +104,11 @@ in_se_b_rb = apply(in_mat_b_rb, 2, sd)
 
 #out of sample predictions
 alpha = coef(in_sample_ols)[1]
-out_z = z[34:74]
+out_z = z[49:93]
 
-e_t_predictions = numeric(41)
-e_t_predictions[1] = canada_time_series$e[34]
-for (i in 2:40) {
+e_t_predictions = numeric(45)
+e_t_predictions[1] = canada_time_series$e[49]
+for (i in 2:44) {
   print(i)
   print(out_z[i-1])
   print(e_t_predictions[i-1])
@@ -119,13 +119,13 @@ for (i in 2:40) {
 }
 
 #plotting predictions against actual
-e_t_out_of_sample_actual = canada_time_series$e[34:74]
-time = canada_time_series$time[34:74]
+e_t_out_of_sample_actual = canada_time_series$e[49:93]
+time = canada_time_series$time[49:93]
 
 difference = (e_t_predictions - e_t_out_of_sample_actual)/(e_t_out_of_sample_actual)
 split_times = c(time[seq(1, length(time), by = 5)])
 split_times = head(split_times, -1)
-time <- factor(canada_time_series$time[34:74], levels = split_times)
+time <- factor(canada_time_series$time[50:94], levels = split_times)
 
 ggplot() +
   geom_line(aes(x = time, y = difference, group = 1)) +

@@ -5,3 +5,4 @@ cleaned_data/new/.DS_Store
 .Rproj.user
 .RData
 .Rhistory
+/output

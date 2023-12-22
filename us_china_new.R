@@ -3,44 +3,44 @@ library(scales)
 library(dplyr)
 
 LAMBDA = 1
-canada_time_series$e = log(canada_time_series$e)
+china_time_series$e = log(china_time_series$e)
 
-canada_time_series$log_us_m = log(canada_time_series$us_money_stock)
-canada_time_series$log_can_m = log(canada_time_series$can_money_stock)
+china_time_series$log_us_m = log(china_time_series$us_money_stock)
+china_time_series$log_cny_m = log(china_time_series$cny_money_stock)
 
-canada_time_series$log_us_y = log(canada_time_series$us_real_income)
-canada_time_series$log_can_y = log(canada_time_series$can_real_income)
+china_time_series$log_us_y = log(china_time_series$us_real_income)
+china_time_series$log_cny_y = log(china_time_series$cny_real_income)
 
 #Seasonality Reduction:
-canada_time_series = canada_time_series %>%
+china_time_series = china_time_series %>%
   mutate(
     log_us_m_lag1 = lag(log_us_m, 1),
     log_us_m_lag2 = lag(log_us_m, 2),
     log_us_m_lag3 = lag(log_us_m, 3),
-    log_can_m_lag1 = lag(log_can_m, 1),
-    log_can_m_lag2 = lag(log_can_m, 2),
-    log_can_m_lag3 = lag(log_can_m, 3),
+    log_cny_m_lag1 = lag(log_cny_m, 1),
+    log_cny_m_lag2 = lag(log_cny_m, 2),
+    log_cny_m_lag3 = lag(log_cny_m, 3),
   ) %>%
   mutate_all(funs(ifelse(is.na(.), 0, .)))
 
-canada_time_series = canada_time_series %>%
+china_time_series = china_time_series %>%
   mutate(log_us_m_lag = log_us_m + log_us_m_lag1 + log_us_m_lag2 + log_us_m_lag3)
 
-canada_time_series = canada_time_series %>%
-  mutate(log_can_m_lag = log_can_m + log_can_m_lag1 + log_can_m_lag2 + log_can_m_lag3)
+china_time_series = china_time_series %>%
+  mutate(log_cny_m_lag = log_cny_m + log_cny_m_lag1 + log_cny_m_lag2 + log_cny_m_lag3)
 
-canada_time_series = canada_time_series %>%
+china_time_series = china_time_series %>%
   select(-log_us_m_lag1, -log_us_m_lag2, -log_us_m_lag3)
-canada_time_series = canada_time_series %>%
-  select(-log_can_m_lag1, -log_can_m_lag2, -log_can_m_lag3)
+china_time_series = china_time_series %>%
+  select(-log_cny_m_lag1, -log_cny_m_lag2, -log_cny_m_lag3)
 
 
-m_dif = canada_time_series$log_us_m_lag - canada_time_series$log_can_m_lag
-y_dif = canada_time_series$log_us_y - canada_time_series$log_can_y
+m_dif = china_time_series$log_us_m_lag - china_time_series$log_cny_m_lag
+y_dif = china_time_series$log_us_y - china_time_series$log_cny_y
 
 f = m_dif - LAMBDA*y_dif
-z = f - canada_time_series$e
-one_period_lag = diff(canada_time_series$e, lag = 1)
+z = f - china_time_series$e
+one_period_lag = diff(china_time_series$e, lag = 1)
 
 #drop last values of f and z
 f = head(f, -1)
@@ -104,32 +104,26 @@ in_se_b_rb = apply(in_mat_b_rb, 2, sd)
 
 #out of sample predictions
 alpha = coef(in_sample_ols)[1]
-out_z = z[34:74]
+out_z = z[34:75]
 
-e_t_predictions = numeric(41)
-e_t_predictions[1] = canada_time_series$e[34]
-for (i in 2:40) {
-  print(i)
-  print(out_z[i-1])
-  print(e_t_predictions[i-1])
-  print(as.numeric(alpha))
-  print(as.numeric(in_debiased_beta))
-  
+e_t_predictions = numeric(42)
+e_t_predictions[1] = china_time_series$e[34]
+for (i in 2:41) {
   e_t_predictions[i] = as.numeric(alpha) + as.numeric(in_debiased_beta) * out_z[i - 1] + e_t_predictions[i - 1]
 }
 
 #plotting predictions against actual
-e_t_out_of_sample_actual = canada_time_series$e[34:74]
-time = canada_time_series$time[34:74]
+e_t_out_of_sample_actual = china_time_series$e[34:75]
+time = china_time_series$time[34:75]
 
 difference = (e_t_predictions - e_t_out_of_sample_actual)/(e_t_out_of_sample_actual)
 split_times = c(time[seq(1, length(time), by = 5)])
 split_times = head(split_times, -1)
-time <- factor(canada_time_series$time[34:74], levels = split_times)
+time <- factor(china_time_series$time[34:75], levels = split_times)
 
 ggplot() +
   geom_line(aes(x = time, y = difference, group = 1)) +
-  labs(title = "Time Series Plot of Differences - CAD/USD Exchange", x = "Time", y = "Percentage Difference") +
+  labs(title = "Time Series Plot of Differences - CNY/USD Exchange", x = "Time", y = "Percentage Difference") +
   theme_minimal() +
   theme(text = element_text(size = 14), legend.position = "bottom") +
   coord_cartesian(ylim = c(-2.0, 2.0))
